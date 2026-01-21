@@ -3,15 +3,17 @@ import { computed, ref, useTemplateRef } from 'vue';
 import { useAutoScroll } from './composables/useAutoScroll';
 import { useChat } from './composables/useChat';
 import MessageList from './components/MessageList.vue';
-import AppButton from './components/AppButton.vue';
+import ChatHeader from './components/ChatHeader.vue';
+import ChatFooter from './components/ChatFooter.vue';
 
-// @ts-ignore
-const { elementRef, scrollToBottom } = useAutoScroll();
+const messagesRef = useTemplateRef<HTMLElement>('scroll-element');
+const { scrollToBottom } = useAutoScroll(messagesRef);
+
 const { messages, isLoading, status, clearMessages, sendMessage } =
   useChat(scrollToBottom);
 
 const inputValue = ref('');
-const inputRef = useTemplateRef<HTMLInputElement>('input-field');
+const chatFooterRef = useTemplateRef<InstanceType<typeof ChatFooter>>('chat-footer');
 
 const isButtonDisabled = computed(() => {
   return inputValue.value.trim().length === 0 || isLoading.value;
@@ -25,72 +27,27 @@ const onSendMessage = async (event: SubmitEvent) => {
     inputValue.value = '';
   }
 
-  inputRef.value?.focus();
+  chatFooterRef.value?.focus();
 };
 </script>
 
 <template>
   <div class="page">
     <div class="chat-card">
-      <header class="chat-header">
-        <div class="chat-title">
-          <div class="chat-title__name">Chat Eliza</div>
-          <div class="chat-title__sub">Vue 3 + TypeScript + ConnectRPC</div>
-        </div>
-
-        <div class="chat-actions">
-          <AppButton @click="clearMessages">Clear</AppButton>
-        </div>
-      </header>
+      <ChatHeader @clear-messages="clearMessages" />
 
       <main
         class="chat-body"
-        ref="elementRef">
+        ref="scroll-element">
         <MessageList :messages="messages" />
       </main>
 
-      <footer class="chat-footer">
-        <form
-          @submit="onSendMessage"
-          class="composer"
-          action="#"
-          aria-label="Message composer">
-          <div class="composer__field">
-            <label
-              class="sr-only"
-              for="message">
-              Message
-            </label>
-
-            <input
-              v-model="inputValue"
-              ref="input-field"
-              id="message"
-              class="input"
-              type="text"
-              placeholder="Type your message…"
-              autocomplete="off" />
-            <div class="composer__hint">
-              Enter — send • Shift+Enter — new line
-            </div>
-          </div>
-
-          <AppButton
-            :disabled="isButtonDisabled"
-            :class="{ 'is-loading': isLoading }"
-            type="submit">
-            <span class="btn__text">Send</span>
-            <span
-              class="btn__spinner"
-              aria-hidden="true"></span>
-          </AppButton>
-        </form>
-
-        <div class="status">
-          <span class="status__dot"></span>
-          <span class="status__text">Ready</span>
-        </div>
-      </footer>
+      <ChatFooter
+        ref="chat-footer"
+        v-model="inputValue"
+        @send-message="onSendMessage"
+        :is-button-disabled="isButtonDisabled"
+        :is-loading="isLoading" />
     </div>
   </div>
 </template>

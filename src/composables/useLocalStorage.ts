@@ -1,26 +1,28 @@
-import { onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 export const useLocalStorage = <T>(key: string, initialValue: T) => {
-  const data = ref<T>(initialValue);
+  let startValue = initialValue;
 
-  onMounted(() => {
+  try {
     const saved = localStorage.getItem(key);
-
     if (saved) {
-      try {
-        data.value = JSON.parse(saved);
-      } catch (e) {
-        console.error(`Failed to parse localStorage for key "${key}"`, e);
-
-        localStorage.removeItem(key);
-      }
+      startValue = JSON.parse(saved);
     }
-  });
+  } catch (e) {
+    console.error(`Failed to parse localStorage for key "${key}"`, e);
+    localStorage.removeItem(key);
+  }
+
+  const data = ref<T>(startValue);
 
   watch(
     data,
     (newValue) => {
-      localStorage.setItem(key, JSON.stringify(newValue));
+      try {
+        localStorage.setItem(key, JSON.stringify(newValue));
+      } catch (e) {
+        console.error(`Failed to save to localStorage for key "${key}"`, e);
+      }
     },
     { deep: true }
   );

@@ -1,8 +1,6 @@
-import { nextTick, ref } from 'vue';
+import { nextTick, type Ref } from 'vue';
 
-export const useAutoScroll = () => {
-  const elementRef = ref<HTMLElement | null>(null);
-
+export const useAutoScroll = (elementRef: Ref<HTMLElement | null>) => {
   const scrollToBottom = async () => {
     await nextTick();
 
@@ -12,7 +10,6 @@ export const useAutoScroll = () => {
   };
 
   return {
-    elementRef,
     scrollToBottom,
   };
 };
