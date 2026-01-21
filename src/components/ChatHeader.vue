@@ -14,7 +14,6 @@ defineEmits<{ (event: 'clear-messages'): void }>();
     <div class="chat-actions">
       <AppButton @click="$emit('clear-messages')">
         <span class="btn__text">Clear</span>
-        Clear
       </AppButton>
     </div>
   </header>
