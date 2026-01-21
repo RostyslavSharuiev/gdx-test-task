@@ -1,4 +1,33 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { computed, ref, useTemplateRef } from 'vue';
+import { useAutoScroll } from './composables/useAutoScroll';
+import { useChat } from './composables/useChat';
+import MessageList from './components/MessageList.vue';
+import AppButton from './components/AppButton.vue';
+
+// @ts-ignore
+const { elementRef, scrollToBottom } = useAutoScroll();
+const { messages, isLoading, status, clearMessages, sendMessage } =
+  useChat(scrollToBottom);
+
+const inputValue = ref('');
+const inputRef = useTemplateRef<HTMLInputElement>('input-field');
+
+const isButtonDisabled = computed(() => {
+  return inputValue.value.trim().length === 0 || isLoading.value;
+});
+
+const onSendMessage = async (event: SubmitEvent) => {
+  event.preventDefault();
+  await sendMessage(inputValue.value);
+
+  if (status.value === 'success') {
+    inputValue.value = '';
+  }
+
+  inputRef.value?.focus();
+};
+</script>
 
 <template>
   <div class="page">
@@ -10,58 +39,32 @@
         </div>
 
         <div class="chat-actions">
-          <button
-            class="btn btn--ghost"
-            type="button">
-            Clear
-          </button>
+          <AppButton @click="clearMessages">Clear</AppButton>
         </div>
       </header>
 
-      <main class="chat-body">
-        <ul
-          class="messages"
-          aria-label="Chat messages">
-          <!-- Message item examples -->
-          <li class="msg msg--bot">
-            <div class="msg__bubble">
-              <div class="msg__meta">
-                Eliza • <span class="msg__time">12:41</span>
-              </div>
-              <div class="msg__text">Hello. How are you feeling today?</div>
-            </div>
-          </li>
-
-          <li class="msg msg--user">
-            <div class="msg__bubble">
-              <div class="msg__meta">
-                You • <span class="msg__time">12:42</span>
-              </div>
-              <div class="msg__text">I feel anxious lately.</div>
-            </div>
-          </li>
-
-          <li class="msg msg--system">
-            <div class="msg__bubble">
-              <div class="msg__meta">System</div>
-              <div class="msg__text">Network error. Please try again.</div>
-            </div>
-          </li>
-        </ul>
+      <main
+        class="chat-body"
+        ref="elementRef">
+        <MessageList :messages="messages" />
       </main>
 
       <footer class="chat-footer">
         <form
+          @submit="onSendMessage"
           class="composer"
           action="#"
           aria-label="Message composer">
           <div class="composer__field">
             <label
               class="sr-only"
-              for="message"
-              >Message</label
-            >
+              for="message">
+              Message
+            </label>
+
             <input
+              v-model="inputValue"
+              ref="input-field"
               id="message"
               class="input"
               type="text"
@@ -72,14 +75,15 @@
             </div>
           </div>
 
-          <button
-            class="btn btn--primary"
+          <AppButton
+            :disabled="isButtonDisabled"
+            :class="{ 'is-loading': isLoading }"
             type="submit">
             <span class="btn__text">Send</span>
             <span
               class="btn__spinner"
               aria-hidden="true"></span>
-          </button>
+          </AppButton>
         </form>
 
         <div class="status">
