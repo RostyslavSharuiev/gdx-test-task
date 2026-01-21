@@ -13,7 +13,8 @@ const { messages, isLoading, status, clearMessages, sendMessage } =
   useChat(scrollToBottom);
 
 const inputValue = ref('');
-const chatFooterRef = useTemplateRef<InstanceType<typeof ChatFooter>>('chat-footer');
+const chatFooterRef =
+  useTemplateRef<InstanceType<typeof ChatFooter>>('chat-footer');
 
 const isButtonDisabled = computed(() => {
   return inputValue.value.trim().length === 0 || isLoading.value;
@@ -52,4 +53,30 @@ const onSendMessage = async (event: SubmitEvent) => {
   </div>
 </template>
 
-<style scoped lang="css"></style>
+<style scoped lang="css">
+.page {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.chat-card {
+  width: min(920px, 100%);
+  height: min(720px, 92vh);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 25%),
+    var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.chat-body {
+  padding: 18px;
+  overflow: auto;
+}
+</style>

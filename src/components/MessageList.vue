@@ -18,4 +18,12 @@ defineProps<{
   </ul>
 </template>
 
-<style lang="css" scoped></style>
+<style lang="css" scoped>
+.messages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+</style>
