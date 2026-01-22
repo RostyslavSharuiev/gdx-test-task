@@ -2,6 +2,7 @@
 import { computed, ref, useTemplateRef } from 'vue';
 import { useAutoScroll } from './composables/useAutoScroll';
 import { useChat } from './composables/useChat';
+import { elizaClient } from './api/elizaClient';
 import MessageList from './components/MessageList.vue';
 import ChatHeader from './components/ChatHeader.vue';
 import ChatFooter from './components/ChatFooter.vue';
@@ -9,8 +10,10 @@ import ChatFooter from './components/ChatFooter.vue';
 const messagesRef = useTemplateRef<HTMLElement>('scroll-element');
 const { scrollToBottom } = useAutoScroll(messagesRef);
 
-const { messages, isLoading, status, clearMessages, sendMessage } =
-  useChat(scrollToBottom);
+const { messages, isLoading, status, clearMessages, sendMessage } = useChat(
+  elizaClient,
+  scrollToBottom
+);
 
 const inputValue = ref('');
 const chatFooterRef =

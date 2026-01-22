@@ -1,17 +1,21 @@
-import { onMounted, ref } from 'vue';
-import { client } from '@/api/client';
-import { useLocalStorage } from './useLocalStorage';
+import { computed, onMounted } from 'vue';
+import { useMessages } from './useMessages';
+import { useElizaApi } from './useElizaApi';
 import { getFormattedTime } from '@/utils/getFormattedTime';
-import type { Message } from '@/types/chat';
-
-const STORAGE_KEY = 'chat-eliza-history';
+import type { ChatApiClient } from '@/api/types';
 
 type MessageStatus = 'success' | 'error';
 
-export const useChat = (scrollToBottom?: () => Promise<void>) => {
-  const isLoading = ref(false);
-  const status = ref<MessageStatus>('success');
-  const messages = useLocalStorage<Message[]>(STORAGE_KEY, []);
+export const useChat = (
+  apiClient: ChatApiClient,
+  scrollToBottom?: () => Promise<void>
+) => {
+  const { messages, addMessage, clearMessages } = useMessages();
+  const {
+    isLoading,
+    error,
+    sendMessage: apiSendMessage,
+  } = useElizaApi(apiClient);
 
   onMounted(async () => {
     if (messages.value.length > 0 && scrollToBottom) {
@@ -19,18 +23,12 @@ export const useChat = (scrollToBottom?: () => Promise<void>) => {
     }
   });
 
-  const clearMessages = () => {
-    messages.value = [];
-  };
-
   const sendMessage = async (text: string) => {
     const textToSend = text.trim();
 
     if (!textToSend) return;
 
-    isLoading.value = true;
-
-    messages.value.push({
+    addMessage({
       role: 'user',
       message: textToSend,
       timestamp: getFormattedTime(),
@@ -40,33 +38,29 @@ export const useChat = (scrollToBottom?: () => Promise<void>) => {
       await scrollToBottom();
     }
 
-    try {
-      const response = await client.say({
-        sentence: textToSend,
-      });
+    const response = await apiSendMessage(textToSend);
 
-      messages.value.push({
+    if (response) {
+      addMessage({
         role: 'bot',
-        message: response.sentence,
+        message: response,
         timestamp: getFormattedTime(),
       });
-
-      status.value = 'success';
-    } catch (error) {
-      messages.value.push({
+    } else {
+      addMessage({
         role: 'system',
-        message: 'Network error. Please try again.',
+        message: error.value || 'Network error. Please try again.',
       });
+    }
 
-      status.value = 'error';
-    } finally {
-      isLoading.value = false;
-
-      if (scrollToBottom) {
-        await scrollToBottom();
-      }
+    if (scrollToBottom) {
+      await scrollToBottom();
     }
   };
+
+  const status = computed<MessageStatus>(() =>
+    error.value ? 'error' : 'success'
+  );
 
   return {
     messages,

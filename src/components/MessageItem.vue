@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Message } from '@/types/chat';
+import { MESSAGE_ROLE_CONFIG } from '@/types/chat';
 import { computed } from 'vue';
 
 const { message } = defineProps<{
@@ -7,14 +8,7 @@ const { message } = defineProps<{
 }>();
 
 const messageUser = computed(() => {
-  switch (message.role) {
-    case 'bot':
-      return 'Eliza';
-    case 'user':
-      return 'You';
-    default:
-      return 'System';
-  }
+  return MESSAGE_ROLE_CONFIG[message.role]?.displayName || 'Unknown';
 });
 </script>
 
